@@ -110,7 +110,13 @@
       Array.from(document.querySelectorAll('[role="menuitem"], [role="menuitemradio"]'))
         .find(i => i.textContent.trim().startsWith(label));
 
-    const isItemActive = (el) => el && el.getAttribute('data-color') === 'selected';
+    const isItemActive = (el) => {
+      if (!el) return false;
+      if (el.getAttribute('aria-checked') === 'true') return true;
+      if (el.getAttribute('data-state') === 'checked') return true;
+      if (el.getAttribute('data-color') === 'selected') return true; // legacy
+      return false;
+    };
 
     const pillNameMap = {
       'Thinking':       'standardThinking',
@@ -171,8 +177,17 @@
       return true;
     };
 
+    const findModelSwitcherBtn = () => {
+      const f = document.querySelector('form.group\\/composer') || document.querySelector('form');
+      if (!f) return null;
+      return Array.from(f.querySelectorAll('button')).find(b =>
+        b.getAttribute('aria-haspopup') === 'menu' &&
+        b.dataset.testid !== 'composer-plus-btn'
+      );
+    };
+
     const openModelMenu = async () => {
-      const trigger = document.querySelector('[data-testid="model-switcher-dropdown-button"]');
+      const trigger = findModelSwitcherBtn();
       if (!trigger) return false;
       realClick(trigger);
       for (let i = 0; i < 30; i++) {
@@ -189,8 +204,11 @@
     const turnThinkingOff = async () => {
       if (!(await openModelMenu())) return;
       const instant = document.querySelector('[data-testid="model-switcher-gpt-5-3"]');
-      if (instant && instant.getAttribute('aria-checked') !== 'true') instant.click();
-      else await closeMenu();
+      if (instant && !isItemActive(instant)) {
+        realClick(instant);
+      } else {
+        await closeMenu();
+      }
       await wait(150);
     };
 
@@ -198,8 +216,11 @@
       if (!(await openModelMenu())) return false;
       const t = document.querySelector('[data-testid="model-switcher-gpt-5-5-thinking"]');
       if (!t) { await closeMenu(); return false; }
-      if (t.getAttribute('aria-checked') !== 'true') t.click();
-      else await closeMenu();
+      if (!isItemActive(t)) {
+        realClick(t);
+      } else {
+        await closeMenu();
+      }
       for (let i = 0; i < 40; i++) {
         await wait(50);
         if (getThinkingComposerPill()) return true;
@@ -208,9 +229,26 @@
     };
 
     const setEffort = async (target) => {
-      const pill = getThinkingComposerPill();
-      if (!pill) return false;
-      realClick(pill);
+      if (!(await openModelMenu())) return false;
+
+      let effortTrigger = null;
+      for (let i = 0; i < 30; i++) {
+        effortTrigger = document.querySelector(
+          '[data-testid="model-switcher-gpt-5-5-thinking-thinking-effort"]'
+        );
+        if (effortTrigger) break;
+        await wait(40);
+      }
+      if (!effortTrigger) { await closeMenu(); return false; }
+
+      const thinkingRow = document.querySelector('[data-testid="model-switcher-gpt-5-5-thinking"]');
+      if (thinkingRow) {
+        realPointer(thinkingRow, 'pointerenter');
+        realPointer(thinkingRow, 'pointermove');
+      }
+
+      realClick(effortTrigger);
+
       let opt = null;
       for (let i = 0; i < 40; i++) {
         await wait(40);
@@ -218,12 +256,13 @@
         if (opt) break;
       }
       if (!opt) { await closeMenu(); return false; }
-      if (opt.getAttribute('aria-checked') === 'true') {
+
+      if (isItemActive(opt)) {
         await closeMenu();
         return true;
       }
-      opt.click();
-      await wait(120);
+      realClick(opt);
+      await wait(150);
       return true;
     };
 
