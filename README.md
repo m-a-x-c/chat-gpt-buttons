@@ -1,12 +1,12 @@
 # ChatGPT Shortcut Buttons
 
-A browser extension that pins shortcut buttons next to ChatGPT's chat box — so you don't have to dig through its ever-changing menus to find Web search, Image, Deep research, Standard / Extended thinking, Agent mode, Add sources, Canvas, Quizzes, or file upload.
+![Preview](previews/preview-1.png)
 
-Click the toolbar icon to choose which buttons appear, or to disable the extension entirely.
+A browser extension that pins shortcut buttons next to ChatGPT's chat box — so you don't have to dig through its ever-changing menus to find Web search, Image, Deep research, Standard / Extended thinking, Agent mode, Add sources, Canvas, Quizzes, or file upload.
 
 ## Install
 
-The same unpacked folder works on every Chromium browser. Firefox loads it as-is too. Safari needs a one-time Xcode wrap.
+Download `chat-gpt-buttons-X.X.zip` from the repo, then follow the steps for your browser.
 
 ### Chrome / Edge / Brave / Opera
 
@@ -16,12 +16,12 @@ The same unpacked folder works on every Chromium browser. Firefox loads it as-is
    - Brave — `brave://extensions`
    - Opera — `opera://extensions`
 2. Toggle **Developer mode** on (top-right).
-3. Click **Load unpacked** and pick this folder.
+3. Drag `chat-gpt-buttons-X.X.zip` onto the page.
 
 ### Firefox
 
 1. Open `about:debugging#/runtime/this-firefox`.
-2. Click **Load Temporary Add-on…** and pick `manifest.json` in this folder.
+2. Click **Load Temporary Add-on…** and pick `chat-gpt-buttons-X.X.zip`.
 
 Temporary loads are cleared when Firefox restarts. For a permanent local install, the extension needs to be signed through [addons.mozilla.org](https://addons.mozilla.org).
 
