@@ -44,7 +44,7 @@
       marginBottom: '0',
       width: '100%',
       flexWrap: 'wrap',
-      background: '#212121',
+      background: getComputedStyle(document.body).backgroundColor || '#000000',
       position: 'relative',
       zIndex: '2'
     });
@@ -180,10 +180,14 @@
     const findModelSwitcherBtn = () => {
       const f = document.querySelector('form.group\\/composer') || document.querySelector('form');
       if (!f) return null;
-      return Array.from(f.querySelectorAll('button')).find(b =>
+      const candidates = Array.from(f.querySelectorAll('button')).filter(b =>
         b.getAttribute('aria-haspopup') === 'menu' &&
-        b.dataset.testid !== 'composer-plus-btn'
+        b.dataset.testid !== 'composer-plus-btn' &&
+        b.getAttribute('aria-label') !== 'Choose image aspect ratio'
       );
+      return candidates.find(b => (b.className || '').toString().includes('__composer-pill'))
+          || candidates[0]
+          || null;
     };
 
     const openModelMenu = async () => {
@@ -203,7 +207,10 @@
 
     const turnThinkingOff = async () => {
       if (!(await openModelMenu())) return;
-      const instant = document.querySelector('[data-testid="model-switcher-gpt-5-3"]');
+      const instant =
+        document.querySelector('[data-testid="model-switcher-gpt-5-5"]') ||
+        Array.from(document.querySelectorAll('[role="menuitemradio"]'))
+          .find(i => i.textContent.trim().startsWith('Instant'));
       if (instant && !isItemActive(instant)) {
         realClick(instant);
       } else {

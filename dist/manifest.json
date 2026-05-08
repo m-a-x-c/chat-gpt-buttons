@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "ChatGPT Shortcut Buttons",
-  "version": "1.1",
+  "version": "1.2",
   "description": "Shortcut buttons so you don't have to dig through ChatGPT's ever-changing menus.",
   "homepage_url": "https://github.com/m-a-x-c/chat-gpt-buttons",
   "permissions": ["storage"],
