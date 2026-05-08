@@ -44,7 +44,7 @@
       marginBottom: '0',
       width: '100%',
       flexWrap: 'wrap',
-      background: 'transparent',
+      background: getComputedStyle(document.body).backgroundColor || '#000000',
       position: 'relative',
       zIndex: '2'
     });
@@ -378,6 +378,7 @@
       requestAnimationFrame(() => {
         themeRefreshScheduled = false;
         THEME = sampleTheme();
+        wrap.style.background = getComputedStyle(document.body).backgroundColor || '#000000';
         Object.values(buttons).forEach(b => {
           if (b._setState) b._setState(b.dataset.on === '1');
         });
