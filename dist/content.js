@@ -44,23 +44,30 @@
       marginBottom: '0',
       width: '100%',
       flexWrap: 'wrap',
-      background: getComputedStyle(document.body).backgroundColor || '#000000',
+      background: 'transparent',
       position: 'relative',
       zIndex: '2'
     });
 
-    const OFF = {
-      bg: 'transparent',
-      color: 'rgb(255, 255, 255)',
-      border: 'rgba(255, 255, 255, 0.15)',
-      hoverBg: 'rgba(255, 255, 255, 0.06)'
+    const sampleTheme = () => {
+      const f = document.querySelector('form.group\\/composer') || document.querySelector('form');
+      const formCS = f ? getComputedStyle(f) : getComputedStyle(document.body);
+      const bodyCS = getComputedStyle(document.body);
+
+      const text = formCS.color || bodyCS.color;
+      const m = (bodyCS.color || '').match(/\d+/g);
+      const isDark = m && (parseInt(m[0]) + parseInt(m[1]) + parseInt(m[2])) / 3 > 128;
+      const border = isDark ? 'rgba(255,255,255,0.22)' : 'rgba(0,0,0,0.22)';
+      const onBg = isDark ? 'rgba(255,255,255,0.16)' : 'rgba(0,0,0,0.10)';
+      const onBorder = isDark ? 'rgba(255,255,255,0.30)' : 'rgba(0,0,0,0.30)';
+
+      return {
+        OFF: { bg: 'transparent', color: text, border, hoverBg: 'rgba(127,127,127,0.12)' },
+        ON:  { bg: onBg, color: text, border: onBorder, hoverBg: onBg }
+      };
     };
-    const ON = {
-      bg: 'rgb(57, 74, 91)',
-      color: 'rgb(153, 206, 255)',
-      border: 'rgba(255, 255, 255, 0.05)',
-      hoverBg: 'rgb(67, 86, 105)'
-    };
+
+    let THEME = sampleTheme();
 
     const makePill = (label) => {
       const b = document.createElement('button');
@@ -76,7 +83,8 @@
         fontFamily: 'inherit',
         transition: 'background 120ms ease, color 120ms ease, border-color 120ms ease'
       });
-      const apply = (theme) => {
+      const apply = (which) => {
+        const theme = THEME[which];
         b._theme = theme;
         b.style.background = theme.bg;
         b.style.color = theme.color;
@@ -86,9 +94,9 @@
       b.onmouseleave = () => { b.style.background = b._theme.bg; };
       b._setState = (on) => {
         b.dataset.on = on ? '1' : '0';
-        apply(on ? ON : OFF);
+        apply(on ? 'ON' : 'OFF');
       };
-      apply(OFF);
+      apply('OFF');
       return b;
     };
 
@@ -329,7 +337,8 @@
         || document.querySelector('input[type="file"]:not([accept])');
       if (fileInput) fileInput.click();
     };
-    uploadBtn._setState = () => {};
+    const originalUploadSetState = uploadBtn._setState;
+    uploadBtn._setState = () => { originalUploadSetState(false); };
     buttons.upload = uploadBtn;
 
     const makePlusBtn = (label, key, isSubmenu) => {
@@ -362,6 +371,27 @@
       });
     };
 
+    let themeRefreshScheduled = false;
+    const refreshTheme = () => {
+      if (themeRefreshScheduled) return;
+      themeRefreshScheduled = true;
+      requestAnimationFrame(() => {
+        themeRefreshScheduled = false;
+        THEME = sampleTheme();
+        Object.values(buttons).forEach(b => {
+          if (b._setState) b._setState(b.dataset.on === '1');
+        });
+      });
+    };
+
+    const mql = window.matchMedia('(prefers-color-scheme: dark)');
+    mql.addEventListener?.('change', refreshTheme);
+    const htmlThemeObserver = new MutationObserver(refreshTheme);
+    htmlThemeObserver.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class', 'data-theme', 'style']
+    });
+
     const applyVisibility = (visible) => {
       PILLS.forEach(({ key, defaultVisible }) => {
         const el = buttons[key];
@@ -381,7 +411,7 @@
 
     const observerTarget = form.parentNode || document.body;
     if (currentStateObserver) currentStateObserver.disconnect();
-    currentStateObserver = new MutationObserver(() => syncFromChat());
+    currentStateObserver = new MutationObserver(() => { syncFromChat(); refreshTheme(); });
     currentStateObserver.observe(observerTarget, { childList: true, subtree: true, characterData: true });
 
     syncFromChat();
